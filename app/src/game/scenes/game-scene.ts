@@ -3,7 +3,7 @@ import {
 } from 'game/assets';
 import { AavegotchiGameObject } from 'types';
 import { getGameWidth, getGameHeight, getRelative } from '../helpers';
-import { Player } from 'game/objects';
+import { Pipe, Player } from 'game/objects';
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
   active: false,
@@ -17,6 +17,7 @@ const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
 export class GameScene extends Phaser.Scene {
   private player?: Player;
   private selectedGotchi?: AavegotchiGameObject;
+  private pipes?: Phaser.GameObjects.Group;
 
   // Sounds
   private back?: Phaser.Sound.BaseSound;
@@ -42,6 +43,22 @@ export class GameScene extends Phaser.Scene {
       y: getGameHeight(this) / 2,
       key: this.selectedGotchi?.spritesheetKey || ''
     })
+
+    this.pipes = this.add.group({
+      maxSize: 25,
+      classType: Pipe,
+      runChildUpdate: true,
+    })
+
+    this.addPipeRow();
+
+    // Add another pipe every 2 seconds
+    this.time.addEvent({
+      delay: 2000,
+      callback: this.addPipeRow,
+      callbackScope: this,
+      loop: true
+    });
   }
 
   private createBackButton = () => {
@@ -54,6 +71,25 @@ export class GameScene extends Phaser.Scene {
         this.back?.play();
         window.history.back();
       });
+  };
+
+  private addPipeRow = () : void => {
+    const size = getGameHeight(this) / 7;
+    const x = getGameWidth(this);
+    const velocityX= -getGameWidth(this) / 5;
+    const gap = Math.floor(Math.random() * 4) + 1;
+
+    for (let i=0; i < 7; i++){
+      if (i !== gap && i !== gap+1){
+        const frame = i === gap -1 ? 2 : i === gap + 2 ? 0 : 1;
+        this.addPipe(x, size * i, frame, velocityX);
+      }
+    }
+  };
+
+  private addPipe = (x: number, y: number, frame: number, velocityX: number) : void => {
+      const pipe : Pipe = this.pipes?.get();
+      pipe && pipe.activate(x, y, frame, velocityX);
   };
 
   public update(): void {
