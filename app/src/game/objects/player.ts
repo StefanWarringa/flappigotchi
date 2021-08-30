@@ -1,3 +1,5 @@
+import { getGameHeight } from '../helpers';
+
 interface Props {
   scene: Phaser.Scene;
   x: number;
@@ -7,7 +9,10 @@ interface Props {
 }
 
 export class Player extends Phaser.GameObjects.Sprite {
-  private cursorKeys?: Phaser.Types.Input.Keyboard.CursorKeys;
+  private jumpKey: Phaser.Input.Keyboard.Key;
+  private pointer: Phaser.Input.Pointer;
+  private isFlapping = false;
+
   public speed = 200;
 
   constructor({ scene, x, y, key }: Props) {
@@ -16,56 +21,23 @@ export class Player extends Phaser.GameObjects.Sprite {
     // sprite
     this.setOrigin(0, 0);
 
-    // Add animations
-    this.anims.create({
-      key: 'idle',
-      frames: this.anims.generateFrameNumbers(key || '', { start: 0, end: 1 }),
-      frameRate: 2,
-      repeat: -1,
-    });
-
     // physics
     this.scene.physics.world.enable(this);
+    (this.body as Phaser.Physics.Arcade.Body).setGravityY(getGameHeight(this.scene) * 1.5);
 
     // input
-    this.cursorKeys = scene.input.keyboard.createCursorKeys();
-
+    this.jumpKey = this.scene.input.keyboard.addKey(Phaser.Input.Keyboard.KeyCodes.SPACE);
+    this.pointer = this.scene.input.activePointer;
     this.scene.add.existing(this);
   }
 
   update(): void {
-    // Every frame, we create a new velocity for the sprite based on what keys the player is holding down.
-    const velocity = new Phaser.Math.Vector2(0, 0);
-    // Horizontal movement
-    switch (true) {
-      case this.cursorKeys?.left.isDown:
-        velocity.x -= 1;
-        this.anims.play('idle', false);
-        break;
-      case this.cursorKeys?.right.isDown:
-        velocity.x += 1;
-        this.anims.play('idle', false);
-        break;
-      default:
-        this.anims.play('idle', true);
-    }
+    if ((this.jumpKey.isDown || this.pointer.isDown) && !this.isFlapping) {
+      this.isFlapping = true;
+      (this.body as Phaser.Physics.Arcade.Body).setVelocityY(-getGameHeight(this.scene) * 0.6);
 
-    // Vertical movement
-    switch (true) {
-      case this.cursorKeys?.down.isDown:
-        velocity.y += 1;
-        this.anims.play('idle', false);
-        break;
-      case this.cursorKeys?.up.isDown:
-        velocity.y -= 1;
-        this.anims.play('idle', false);
-        break;
-      default:
-        this.anims.play('idle', true);
+    } else if (this.jumpKey.isUp && !this.pointer.isDown && this.isFlapping) {
+      this.isFlapping = false;
     }
-
-    // We normalize the velocity so that the player is always moving at the same speed, regardless of direction.
-    const normalizedVelocity = velocity.normalize();
-    (this.body as Phaser.Physics.Arcade.Body).setVelocity(normalizedVelocity.x * this.speed, normalizedVelocity.y * this.speed);
   }
 }
