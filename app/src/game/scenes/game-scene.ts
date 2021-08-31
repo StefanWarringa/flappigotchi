@@ -93,7 +93,33 @@ export class GameScene extends Phaser.Scene {
   };
 
   public update(): void {
-    // Every frame, we update the player
-    this.player?.update();
+    if (this.player && !this.player.isDead) {
+      this.player.update()
+
+      // Player collides with pipe
+      this.physics.overlap(
+          this.player,
+          this.pipes,
+          () => {
+            this.player?.setDead(true);
+          },
+          undefined,
+          this,
+      );
+    } else {
+        // Game over: freeze scene
+        Phaser.Actions.Call(
+            (this.pipes as Phaser.GameObjects.Group).getChildren(),
+            (pipe) => {
+              (pipe.body as Phaser.Physics.Arcade.Body).setVelocityX(0);
+            },
+            this,
+        );
+    }
+
+    // Auto-return to main menu when deceased player has left this world...
+    if (this.player && this.player.y > this.sys.canvas.height) {
+      window.history.back();
+    }
   }
 }

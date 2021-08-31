@@ -21,7 +21,7 @@ export class Player extends Phaser.GameObjects.Sprite {
     return this._isDead;
   }
 
-  set isDead(value: boolean) {
+  setDead(value: boolean) {
     this._isDead = value;
     if (this.isDead) {
       this.anims.play('dead');
@@ -66,7 +66,7 @@ export class Player extends Phaser.GameObjects.Sprite {
     }
 
     if (this.y > getGameHeight(this.scene) || this.y < 0){
-      this.isDead = true;
+      this.setDead(true);
     }
   }
 }
