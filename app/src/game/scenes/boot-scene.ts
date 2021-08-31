@@ -165,22 +165,32 @@ export class BootScene extends Phaser.Scene {
   };
 
   /**
-   * Constructs and loads in the Aavegotchi spritesheet, you can use customiseSVG() to create custom poses and animations
+   * Constructs and loads in the Aavegotchi spritesheet.
+   * You can use customiseSVG() to create custom poses and animations
    */
   private loadInGotchiSpritesheet = async (
     gotchiObject: AavegotchiGameObject
   ) => {
     const svg = gotchiObject.svg;
     const spriteMatrix = [
-      [
-        customiseSvg(svg, { removeBg: true }),
-        customiseSvg(svg, {
-          armsUp: true,
-          eyes: "happy",
-          float: true,
-          removeBg: true,
-        }),
-      ],
+        // flapping animation
+        [
+          customiseSvg(svg, {
+            armsUp: true,
+            removeBg: true,
+            removeShadow: true,
+          }),
+          customiseSvg(svg, { removeBg: true, removeShadow: true }),
+        ],
+        // dead frame
+        [
+          customiseSvg(svg, {
+            removeBg: true,
+            removeShadow: true,
+            eyes: 'sleeping',
+            mouth: 'neutral'
+          }),
+        ]
     ];
 
     const { src, dimensions } = await constructSpritesheet(spriteMatrix);
