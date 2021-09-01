@@ -21,6 +21,7 @@ export const FULLSCREEN = 'fullscreen';
 export const LEFT_CHEVRON = 'left_chevron';
 export const CLICK = 'click';
 export const PIPES = 'pipes';
+export const BOOP = 'boop';
 
 // Save all in game assets in the public folder
 export const assets: Array<Asset | SpritesheetAsset> = [
@@ -47,5 +48,10 @@ export const assets: Array<Asset | SpritesheetAsset> = [
       frameWidth: 80 / 1,
       frameHeight: 217 / 3,
     }
-  }
+  },
+  {
+    key: BOOP,
+    src: 'assets/sounds/boop.mp3',
+    type: 'AUDIO',
+  },
 ];

@@ -1,5 +1,5 @@
 import {
-  LEFT_CHEVRON, BG, CLICK
+  LEFT_CHEVRON, BG, CLICK, BOOP
 } from 'game/assets';
 import { AavegotchiGameObject } from 'types';
 import { getGameWidth, getGameHeight, getRelative } from '../helpers';
@@ -21,6 +21,7 @@ export class GameScene extends Phaser.Scene {
 
   // Sounds
   private back?: Phaser.Sound.BaseSound;
+  private boop?: Phaser.Sound.BaseSound;
 
   constructor() {
     super(sceneConfig);
@@ -34,6 +35,7 @@ export class GameScene extends Phaser.Scene {
     // Add layout
     this.add.image(getGameWidth(this) / 2, getGameHeight(this) / 2, BG).setDisplaySize(getGameWidth(this), getGameHeight(this));
     this.back = this.sound.add(CLICK, { loop: false });
+    this.boop = this.sound.add(BOOP, { loop: false });
     this.createBackButton();
 
     // Add a player sprite that can be moved around.
@@ -102,6 +104,7 @@ export class GameScene extends Phaser.Scene {
           this.pipes,
           () => {
             this.player?.setDead(true);
+            this.boop?.play();
           },
           undefined,
           this,
