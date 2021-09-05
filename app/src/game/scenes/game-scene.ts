@@ -3,7 +3,7 @@ import {
 } from 'game/assets';
 import { AavegotchiGameObject } from 'types';
 import { getGameWidth, getGameHeight, getRelative } from '../helpers';
-import { Pipe, Player } from 'game/objects';
+import { Pipe, Player, ScoreZone } from 'game/objects';
 
 const sceneConfig: Phaser.Types.Scenes.SettingsConfig = {
   active: false,
@@ -18,6 +18,11 @@ export class GameScene extends Phaser.Scene {
   private player?: Player;
   private selectedGotchi?: AavegotchiGameObject;
   private pipes?: Phaser.GameObjects.Group;
+  private scoreZones? : Phaser.GameObjects.Group;
+
+  // Score
+  private score = 0;
+  private scoreText? : Phaser.GameObjects.Text;
 
   // Sounds
   private back?: Phaser.Sound.BaseSound;
@@ -38,6 +43,18 @@ export class GameScene extends Phaser.Scene {
     this.boop = this.sound.add(BOOP, { loop: false });
     this.createBackButton();
 
+    // Score
+    this.scoreText = this.add.text(
+        getGameWidth(this) / 2,
+        getGameHeight(this) / 2 - getRelative(190, this),
+        this.score.toString(),
+        {
+          color: '#FFFFFF'
+        })
+        .setFontSize(getRelative(94, this))
+        .setOrigin(0.5)
+        .setDepth(1); // set depth to 1 to see score in front of pipes
+
     // Add a player sprite that can be moved around.
     this.player = new Player({
       scene: this,
@@ -51,6 +68,8 @@ export class GameScene extends Phaser.Scene {
       classType: Pipe,
       runChildUpdate: true,
     })
+
+    this,this.scoreZones = this.add.group({ classType: ScoreZone });
 
     this.addPipeRow();
 
@@ -75,6 +94,16 @@ export class GameScene extends Phaser.Scene {
       });
   };
 
+  private addScoreZone = (x: number, y: number, velocityX: number) : void => {
+    const height = 2 * getGameHeight(this) / 7;
+    const width = getGameHeight( this) / 7;
+    this.scoreZones?.add(
+        new ScoreZone({
+          scene: this, x, y, width, height, velocityX}
+        )
+    );
+  };
+
   private addPipeRow = () : void => {
     const size = getGameHeight(this) / 7;
     const x = getGameWidth(this);
@@ -85,6 +114,8 @@ export class GameScene extends Phaser.Scene {
       if (i !== gap && i !== gap+1){
         const frame = i === gap -1 ? 2 : i === gap + 2 ? 0 : 1;
         this.addPipe(x, size * i, frame, velocityX);
+      } else if (i === gap) {
+        this.addScoreZone(x, size*i, velocityX);
       }
     }
   };
@@ -92,6 +123,13 @@ export class GameScene extends Phaser.Scene {
   private addPipe = (x: number, y: number, frame: number, velocityX: number) : void => {
       const pipe : Pipe = this.pipes?.get();
       pipe && pipe.activate(x, y, frame, velocityX);
+  };
+
+  private addScore = () => {
+    if (this.scoreText){
+      this.score += 1;
+      this.scoreText.setText(this.score.toString());
+    }
   };
 
   public update(): void {
@@ -109,12 +147,29 @@ export class GameScene extends Phaser.Scene {
           undefined,
           this,
       );
+
+      // Player collides with scoreZone
+      this.physics.overlap(
+          this.player,
+          this.scoreZones,
+          (_,zone) => {
+            (zone as ScoreZone).handleOverlap();
+            this.addScore();
+          }
+      );
     } else {
         // Game over: freeze scene
         Phaser.Actions.Call(
             (this.pipes as Phaser.GameObjects.Group).getChildren(),
             (pipe) => {
               (pipe.body as Phaser.Physics.Arcade.Body).setVelocityX(0);
+            },
+            this,
+        );
+        Phaser.Actions.Call(
+            (this.scoreZones as Phaser.GameObjects.Group).getChildren(),
+            (zone) => {
+              (zone.body as Phaser.Physics.Arcade.Body).setVelocityX(0);
             },
             this,
         );
